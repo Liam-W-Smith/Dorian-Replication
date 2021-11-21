@@ -1274,7 +1274,7 @@ G_Score_Ida2 = ggplot() +
     axis.title.y = element_blank()
   )
 
-G_Score_Ida3 = ggplot() +
+G_Score_Ida3.1 = ggplot() +
   geom_sf(data = counties3, aes(fill = sig), color = "white", lwd = 0.1) +
   scale_fill_manual(
     values = c("#0000FF80", "#8080FF80", "#FFFFFF80", "#FF808080", "#FF000080"),
@@ -1308,8 +1308,8 @@ ggsave(
 )
 
 ggsave(
-  here("results","maps","G_Score_Ida3.png"),
-  plot = G_Score_Ida3,
+  here("results","maps","G_Score_Ida3.1.png"),
+  plot = G_Score_Ida3.1,
   width = 8.5,
   height = 11,
   units = "in"
