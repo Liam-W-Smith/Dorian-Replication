@@ -221,7 +221,7 @@ november_raw <- rehydratoR(twitter_token$app$key, twitter_token$app$secret,
 )
 ``` 
 
-## Load the original search results. I STARTED HERE! I RAN SOME CODE FOR EACH INDIVIDUAL QUERY, DID NOT UNION THEM OR LOOK CLOSELY ON THE METHODOLOGY ONLINE...
+## Load the original search results.
 
 Students in the GEOG 323 Open Source GIScience course may download the original
 search results from the private course data repository: 
@@ -256,11 +256,11 @@ tevent_rawfull2 <- dplyr::union(tevent_raw, tevent_raw2)
 ```
 
 ```{r}
-tevent_rawfull <- dplyr::union(tevent_rawfull, tevent_raw3)
+tevent_rawfull <- dplyr::union(tevent_rawfull2, tevent_raw3)
 ```
 
 ```{r}
-rm(tevent_rawfull2, tevent_raw, tevent_raw2, tevent_raw2, tevent_raw3, tevent_raw4)
+rm(tevent_rawfull2, tevent_raw, tevent_raw2, tevent_raw3, tevent_raw4)
 ```
 
 ## Process geographic data in tweets 
@@ -349,16 +349,17 @@ tevent <- readRDS(here("data", "derived", "private", "tevent.RDS"))
 control <- readRDS(here("data", "derived", "private", "control.RDS"))
 ```
 
-# Temporal Analysis
+# Temporal Analysis     ALSO HOW TO SAVE THIS TO RIGHT PLACE?
 
 Create a temporal data frame and graph it
 
 ```{r temporal}
+png("temporal.png", 600, 600)
 tevent_tweets_by_hour <- ts_data(tevent, by = "hours")
 ts_plot(tevent, by = "hours")
 ```
 
-# Network Analysis THIS LOOKS WEIRD MAYBE FIX IT AFTER LEARNING ABOUT NETWORKS IN DATA SCIENCE
+# Network Analysis TRIED FIXING THIS! HOW TO SAVE TO RIGHT PLACE???
 
 Create a network data frame. 
 Other options for 'edges' in the network include mention, retweet, and reply
@@ -378,15 +379,19 @@ tevent_network <- delete.vertices(
   simplify()
 tevent_network <- delete.vertices(
   tevent_network,
-  degree(tevent_network) == 0
-  )
-plot.igraph(
+  degree(tevent_network) < 10)
+```
+
+
+```{r network}
+png("network.png", 1500, 1500)
+network <- plot.igraph(
     tevent_network,
-    vertex.size = 4,
+    vertex.size = degree(tevent_network)*.4,
     vertex.label = ifelse(
-      degree(tevent_network) > 2, 
+      degree(tevent_network) > 5, 
       V(tevent_network)$name, ""), 
-    vertex.label.cex = 0.8, 
+    vertex.label.cex = degree(tevent_network)*.1, 
     edge.arrow.mode = "->",
     edge.arrow.size = 0.1
   )
@@ -447,7 +452,7 @@ tevent_words %>%
   )
 ```
 
-## Analyze and graph word assoctiation MOVING ON WILL RUN THIS LATER
+## Analyze and graph word assoctiation 
 ```{r word-association}
 # separate words and count frequency of word pair occurrence in tweets
 tevent_word_pairs <- tevent_text %>%
@@ -457,10 +462,22 @@ tevent_word_pairs <- tevent_text %>%
   count(word1, word2, sort = TRUE)
 ```
 
+
+```{r}
+saveRDS(tevent_word_pairs, here("data", "derived", "public", "tevent_word_pairs.RDS"))
+```
+
+Can load it as...
+
+```{r load-counties}
+tevent_word_pairs <- readRDS(here("data", "derived", "public", "tevent_word_pairs.RDS"))
+```
+
+
 ```{r}
 # graph a word cloud with space indicating association.
 # you may change the filter to filter more or less than pairs with 25 instances
-tevent_word_pairs %>%
+word_pairs = tevent_word_pairs %>%
   filter(n >= 1000 & !is.na(word1) & !is.na(word2)) %>%
   graph_from_data_frame() %>%
   ggraph(layout = "fr") +
@@ -468,9 +485,9 @@ tevent_word_pairs %>%
   geom_node_point(color = "darkslategray4", size = 3) +
   geom_node_text(aes(label = name), vjust = 1.8, size = 3) +
   labs(
-    title = "Word Network of Tweets during Hurricane event",
+    title = "Word Network of Tweets during Hurricane Ida",
     x = "", y = ""
-  ) +
+  )+
   theme(
     plot.background = element_rect(
     fill = "grey95",
@@ -481,6 +498,16 @@ tevent_word_pairs %>%
   )
 ```
 
+
+```{r save map}
+ggsave(
+  here("results","figures","word_network.png"),
+  plot = word_pairs,
+  width = 8,
+  height = 8,
+  units = "in"
+)
+```
 
 
 ## Spatial Analysis
@@ -789,9 +816,506 @@ ggsave(
 
 
 # NEW ADDITIONS
-subset data by time or location and see how that affects text analysis or network analysis
-
-maybe do some sentiment analysis, could see how that changes with time
-
-use whatever I learn in data science tomorrow to help me
 think abstractly about differences between wildfire, dorian and ida.
+
+## Subset the Data into Three Time Periods. 
+
+```{r time 1: first wave}
+time1 <- tevent_rawfull %>%
+  filter(str_detect(created_at, "-08-29|-08-30|-08-31"))
+```
+
+```{r time 2: second wave}
+time2 <- tevent_rawfull %>%
+  filter(str_detect(created_at, "-09-01|-09-02|-09-03"))
+```
+
+```{r time 3: dwindling results}
+time3 <- tevent_rawfull %>%
+  filter(str_detect(created_at, "-09-(0[4-9]|10)"))
+```
+
+```{r}
+sentiments <- get_sentiments("bing") #bing is a certain list of sentiments
+sentiments
+```
+
+```{r}
+stop_words <- stop_words %>%
+  add_row(word = "t.co", lexicon = "SMART") %>%
+  add_row(word = "hurricane", lexicon = "Search") %>%
+  add_row(word = "ida", lexicon = "Search") %>%
+  add_row(word = "hurricaneida", lexicon = "Search")
+```
+
+## Text Processing for Time1
+```{r text-processing}
+# remove urls, fancy formatting, etc. in other words, clean the text content
+time1_text <- time1 %>%
+  select(text) %>%
+  plain_tweets()
+# parse out words from tweet text
+time1_words <- time1_text %>% unnest_tokens(word, text)
+# how many words do you have including the stop words?
+time1_wordcount <- list(before = count(time1_words)$n)
+# create list of stop words (useless words not worth analyzing)
+data("stop_words")
+
+# delete stop words from tevent_words with an anti_join
+time1_words <- anti_join(time1_words, stop_words, by="word")
+# how many words after removing the stop words?
+time1_wordcount <- append(
+  time1_wordcount,
+  list(after = count(time1_words)$n)
+  )
+print(time1_wordcount)
+```
+
+## Text Processing for Time2
+```{r text-processing}
+# remove urls, fancy formatting, etc. in other words, clean the text content
+time2_text <- time2 %>%
+  select(text) %>%
+  plain_tweets()
+# parse out words from tweet text
+time2_words <- time2_text %>% unnest_tokens(word, text)
+# how many words do you have including the stop words?
+time2_wordcount <- list(before = count(time2_words)$n)
+# create list of stop words (useless words not worth analyzing)
+data("stop_words")
+
+# delete stop words from tevent_words with an anti_join
+time2_words <- anti_join(time2_words, stop_words, by="word")
+# how many words after removing the stop words?
+time2_wordcount <- append(
+  time2_wordcount,
+  list(after = count(time2_words)$n)
+  )
+print(time2_wordcount)
+```
+
+
+## Text Processing for Time3
+```{r text-processing}
+# remove urls, fancy formatting, etc. in other words, clean the text content
+time3_text <- time3 %>%
+  select(text) %>%
+  plain_tweets()
+# parse out words from tweet text
+time3_words <- time3_text %>% unnest_tokens(word, text)
+# how many words do you have including the stop words?
+time3_wordcount <- list(before = count(time3_words)$n)
+# create list of stop words (useless words not worth analyzing)
+data("stop_words")
+
+# delete stop words from tevent_words with an anti_join
+time3_words <- anti_join(time3_words, stop_words, by="word")
+# how many words after removing the stop words?
+time3_wordcount <- append(
+  time3_wordcount,
+  list(after = count(time3_words)$n)
+  )
+print(time3_wordcount)
+```
+
+
+## Sentiment Analysis
+```{r}
+# Time1
+time1_wordsent <- time1_words %>%
+  inner_join(sentiments)
+
+# Time2
+time2_wordsent <- time2_words %>%
+  inner_join(sentiments)
+
+# Time3
+time3_wordsent <- time3_words %>%
+  inner_join(sentiments)
+
+```
+
+```{r}
+sentiment_analysis1 = time1_wordsent %>%
+  group_by(word, sentiment) %>%
+  summarize(num = n()) %>%
+  filter(num > 1000) %>% 
+  ggplot(aes(y = reorder(word, num), x = num, fill = sentiment)) +
+    geom_bar(stat = "identity")+
+    facet_wrap(~sentiment, scales = "free")+
+    labs(title = "Hurricane Ida Comments, August 29 - 31", x = "Frequency of Usage on Twitter", y = "Words Conveying Sentiment")
+```
+
+```{r}
+sentiment_analysis2 = time2_wordsent %>%
+  group_by(word, sentiment) %>%
+  summarize(num = n()) %>%
+  filter(num > 1000) %>% 
+  ggplot(aes(y = reorder(word, num), x = num, fill = sentiment)) +
+    geom_bar(stat = "identity")+
+    facet_wrap(~sentiment, scales = "free")+
+    labs(title = "Hurricane Ida Comments, September 1 - 3", x = "Frequency of Usage on Twitter", y = "Words Conveying Sentiment")
+```
+
+
+
+```{r}
+sentiment_analysis3 = time3_wordsent %>%
+  group_by(word, sentiment) %>%
+  summarize(num = n()) %>%
+  filter(num > 500) %>% 
+  ggplot(aes(y = reorder(word, num), x = num, fill = sentiment)) +
+    geom_bar(stat = "identity")+
+    facet_wrap(~sentiment, scales = "free")+
+    labs(title = "Hurricane Ida Comments, September 4 - 10", x = "Frequency of Usage on Twitter", y = "Words Conveying Sentiment")
+```
+
+
+```{r save graphs}
+ggsave(
+  here("results","figures","sentiment_analysis1.png"),
+  plot = sentiment_analysis1,
+  width = 8.5,
+  height = 11,
+  units = "in"
+)
+
+ggsave(
+  here("results","figures","sentiment_analysis2.png"),
+  plot = sentiment_analysis2,
+  width = 8.5,
+  height = 11,
+  units = "in"
+)
+
+ggsave(
+  here("results","figures","sentiment_analysis3.png"),
+  plot = sentiment_analysis3,
+  width = 8.5,
+  height = 11,
+  units = "in"
+)
+```
+
+
+
+Time1 corresponds to when the storm hit the southeast.
+Time2 corresponds to when the storm hit the northeast.
+Time3 is the few days following that.
+
+
+
+## Spatial Cluster Analysis
+
+### Subset the Data with Geometry into Three Time Periods. 
+
+```{r time 1: first wave}
+time1_g <- tevent %>%
+  filter(str_detect(created_at, "-08-29|-08-30|-08-31"))
+```
+
+```{r time 2: second wave}
+time2_g <- tevent %>%
+  filter(str_detect(created_at, "-09-01|-09-02|-09-03"))
+```
+
+```{r time 3: dwindling results}
+time3_g <- tevent %>%
+  filter(str_detect(created_at, "-09-(0[4-9]|10)"))
+```
+
+### Join Tweets to Counties
+```{r join-tweets-to-counties}
+# time1
+tevent_sf <- time1_g %>%
+  st_as_sf(coords = c("lng", "lat"), crs = 4326) %>% # make point geometries
+  st_transform(4269) %>% # transform to NAD 1983
+  st_join(select(counties, GEOID)) # spatially join counties to each tweet
+
+time1_by_county <- tevent_sf %>%
+  st_drop_geometry() %>% # drop geometry / make simple table
+  group_by(GEOID) %>% # group by county using GEOID
+  summarise(time1_g = n()) # count # of tweets
+
+counties1 <- counties %>%
+  left_join(time1_by_county, by = "GEOID") %>% # join count of tweets to counties
+  mutate(time1_g = replace_na(time1_g, 0)) # replace nulls with 0's
+
+rm(time1_by_county, tevent_sf)
+
+# time2
+tevent_sf <- time2_g %>%
+  st_as_sf(coords = c("lng", "lat"), crs = 4326) %>% # make point geometries
+  st_transform(4269) %>% # transform to NAD 1983
+  st_join(select(counties, GEOID)) # spatially join counties to each tweet
+
+time2_by_county <- tevent_sf %>%
+  st_drop_geometry() %>% # drop geometry / make simple table
+  group_by(GEOID) %>% # group by county using GEOID
+  summarise(time2_g = n()) # count # of tweets
+
+counties2 <- counties %>%
+  left_join(time2_by_county, by = "GEOID") %>% # join count of tweets to counties
+  mutate(time2_g = replace_na(time2_g, 0)) # replace nulls with 0's
+
+rm(time2_by_county, tevent_sf)
+
+# time3
+tevent_sf <- time3_g %>%
+  st_as_sf(coords = c("lng", "lat"), crs = 4326) %>% # make point geometries
+  st_transform(4269) %>% # transform to NAD 1983
+  st_join(select(counties, GEOID)) # spatially join counties to each tweet
+
+time3_by_county <- tevent_sf %>%
+  st_drop_geometry() %>% # drop geometry / make simple table
+  group_by(GEOID) %>% # group by county using GEOID
+  summarise(time3_g = n()) # count # of tweets
+
+counties3 <- counties %>%
+  left_join(time3_by_county, by = "GEOID") %>% # join count of tweets to counties
+  mutate(time3_g = replace_na(time3_g, 0)) # replace nulls with 0's
+
+rm(time3_by_county, tevent_sf)
+
+# Repeat the workflow above for tweets in November
+
+control_by_county <- control %>%
+  st_as_sf(coords = c("lng", "lat"), crs = 4326) %>%
+  st_transform(4269) %>%
+  st_join(select(counties, GEOID)) %>%
+  st_drop_geometry() %>%
+  group_by(GEOID) %>%
+  summarise(control = n())
+
+# Join control data to county layers
+counties1 <- counties1 %>%
+  left_join(control_by_county, by = "GEOID") %>%
+  mutate(control = replace_na(control, 0))
+
+counties2 <- counties2 %>%
+  left_join(control_by_county, by = "GEOID") %>%
+  mutate(control = replace_na(control, 0))
+
+counties3 <- counties3 %>%
+  left_join(control_by_county, by = "GEOID") %>%
+  mutate(control = replace_na(control, 0))
+
+# Calculate tweets per 10,000 for each time period
+counties1 <- counties1 %>%
+  mutate(dorrate = time1_g / POP * 10000) # dorrate is tweets per 10,000
+counties2 <- counties2 %>%
+  mutate(dorrate = time2_g / POP * 10000) # dorrate is tweets per 10,000
+counties3 <- counties3 %>%
+  mutate(dorrate = time3_g / POP * 10000) # dorrate is tweets per 10,000
+
+rm(control_by_county)
+
+# save counties geographic data with derived tweet rates
+saveRDS(counties1, here("data", "derived", "public", "counties1_tweet_counts.RDS"))
+saveRDS(counties2, here("data", "derived", "public", "counties2_tweet_counts.RDS"))
+saveRDS(counties3, here("data", "derived", "public", "counties3_tweet_counts.RDS"))
+```
+
+### Create Spatial Weight Matrices
+
+Use 110km Euclidean distance and include self in the weight matrix
+
+```{r spatial-weight-matrix, warning = FALSE}
+county_coords1 <- counties1 %>%
+  st_centroid() %>% # convert polygons to centroid points
+  st_coordinates() # convert to simple x,y coordinates to play with stdep
+
+county_coords2 <- counties2 %>%
+  st_centroid() %>% # convert polygons to centroid points
+  st_coordinates() # convert to simple x,y coordinates to play with stdep
+
+county_coords3 <- counties3 %>%
+  st_centroid() %>% # convert polygons to centroid points
+  st_coordinates() # convert to simple x,y coordinates to play with stdep
+
+thresdist1 <- county_coords1 %>% 
+  dnearneigh(0, 110, longlat = TRUE) %>% # use geodesic distance of 110km
+  # distance should be long enough for every feature to have >= one neighbor
+  include.self() # include a county in its own neighborhood (for G*)
+
+thresdist2 <- county_coords2 %>% 
+  dnearneigh(0, 110, longlat = TRUE) %>% # use geodesic distance of 110km
+  # distance should be long enough for every feature to have >= one neighbor
+  include.self() # include a county in its own neighborhood (for G*)
+
+thresdist3 <- county_coords3 %>% 
+  dnearneigh(0, 110, longlat = TRUE) %>% # use geodesic distance of 110km
+  # distance should be long enough for every feature to have >= one neighbor
+  include.self() # include a county in its own neighborhood (for G*)
+
+print(thresdist1) # view statistical summary of the nearest neighbors
+print(thresdist2)
+print(thresdist3)
+```
+
+## Calculate Getis-Ord G* Statistic
+
+```{r getis-ord}
+
+# Time1
+dwm1 <- nb2listw(thresdist1, zero.policy = T)
+
+counties1$locG <- as.vector(localG(counties1$dorrate,
+  listw = dwm1,
+  zero.policy = TRUE
+))
+
+summary(counties1$locG)
+
+# Time2
+dwm2 <- nb2listw(thresdist2, zero.policy = T)
+
+counties2$locG <- as.vector(localG(counties2$dorrate,
+  listw = dwm2,
+  zero.policy = TRUE
+))
+
+summary(counties2$locG)
+
+# Time3
+dwm3 <- nb2listw(thresdist3, zero.policy = T)
+
+counties3$locG <- as.vector(localG(counties3$dorrate,
+  listw = dwm3,
+  zero.policy = TRUE
+))
+
+summary(counties3$locG)
+```
+
+## Map Hotpots
+
+classify G scores by significance values typical of Z-scores
+where 1.15 is at the 0.125 confidence level,
+and 1.95 is at the 0.05 confidence level for two tailed z-scores
+based on Getis and Ord (1995) Doi: 10.1111/j.1538-4632.1992.tb00261.x
+to find other critical values, use the qnorm() function as shown here:
+https://methodenlehre.github.io/SGSCLM-R-course/statistical-distributions.html
+Getis Ord also suggest applying a Bonferroni correction 
+
+breaks and colors from http://michaelminn.net/tutorials/r-point-analysis/
+based on 1.96 as the 95% confidence interval for z-scores
+if your results don't have values in each of the 5 categories, you may need
+to change the values & labels accordingly.
+
+Can we figure out a way to include the neighborhood surrounding each significant
+cluster?
+
+```{r map-hotspots}
+# classify by significance levels
+siglevel <- c(1.15, 1.95)
+counties1 <- counties1 %>%
+  mutate(sig = cut(locG, c(
+    min(counties1$locG),
+    siglevel[2] * -1,
+    siglevel[1] * -1,
+    siglevel[1],
+    siglevel[2],
+    max(counties1$locG)
+  )))
+
+counties2 <- counties2 %>%
+  mutate(sig = cut(locG, c(
+    min(counties2$locG),
+    siglevel[2] * -1,
+    siglevel[1] * -1,
+    siglevel[1],
+    siglevel[2],
+    max(counties2$locG)
+  )))
+
+siglevel2 <- c(1.15, 1.95, -.9, -1.17)
+
+counties3 <- counties3 %>%
+  mutate(sig = cut(locG, c(
+    min(counties3$locG),
+    siglevel2[4],
+    siglevel2[3],
+    siglevel2[1],
+    siglevel2[2],
+    max(counties3$locG)
+  )))
+
+rm(siglevel, siglevel2)
+
+# map results!
+G_Score_Ida1 = ggplot() +
+  geom_sf(data = counties1, aes(fill = sig), color = "white", lwd = 0.1) +
+  scale_fill_manual(
+    values = c("#0000FF80", "#8080FF80", "#FFFFFF80", "#FF808080", "#FF000080"),
+    labels = c("low", "", "insignificant", "", "high"),
+    aesthetics = "fill"
+  ) +
+  guides(fill = guide_legend(title = "Hot Spots")) +
+  labs(title = "Clusters of Hurricane Ida Twitter Activity, August 29-31") +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()
+  )
+
+G_Score_Ida2 = ggplot() +
+  geom_sf(data = counties2, aes(fill = sig), color = "white", lwd = 0.1) +
+  scale_fill_manual(
+    values = c("#0000FF80", "#8080FF80", "#FFFFFF80", "#FF808080", "#FF000080"),
+    labels = c("low", "", "insignificant", "", "high"),
+    aesthetics = "fill"
+  ) +
+  guides(fill = guide_legend(title = "Hot Spots")) +
+  labs(title = "Clusters of Hurricane Ida Twitter Activity, September 1 - 3") +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()
+  )
+
+G_Score_Ida3 = ggplot() +
+  geom_sf(data = counties3, aes(fill = sig), color = "white", lwd = 0.1) +
+  scale_fill_manual(
+    values = c("#0000FF80", "#8080FF80", "#FFFFFF80", "#FF808080", "#FF000080"),
+    labels = c("low", "", "insignificant", "", "high"),
+    aesthetics = "fill"
+  ) +
+  guides(fill = guide_legend(title = "Hot Spots")) +
+  labs(title = "Clusters of Hurricane Ida Twitter Activity, September 4 - 10") +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()
+  )
+```
+
+```{r save map}
+ggsave(
+  here("results","maps","G_Score_Ida1.png"),
+  plot = G_Score_Ida1,
+  width = 8.5,
+  height = 11,
+  units = "in"
+)
+
+ggsave(
+  here("results","maps","G_Score_Ida2.png"),
+  plot = G_Score_Ida2,
+  width = 8.5,
+  height = 11,
+  units = "in"
+)
+
+ggsave(
+  here("results","maps","G_Score_Ida3.png"),
+  plot = G_Score_Ida3,
+  width = 8.5,
+  height = 11,
+  units = "in"
+)
+```
+
+ISSUE! G_SCORE_IDA3 DOES NOT HAVE ALL OF THE SIGNIFICANCE LEVELS... HOW TO FIX?
+
+
