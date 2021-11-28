@@ -158,6 +158,12 @@ write.table(tdcontrol_raw$status_id,
 )
 ```
 
+```{r}
+write.table(control_raw$status_id,
+  here("data", "raw", "public", "control_raw.txt"),
+  append = FALSE, quote = FALSE, row.names = FALSE, col.names = FALSE
+)
+```
 
 
 ## Rehydrate the twitter data
@@ -349,7 +355,7 @@ tevent <- readRDS(here("data", "derived", "private", "tevent.RDS"))
 control <- readRDS(here("data", "derived", "private", "control.RDS"))
 ```
 
-# Temporal Analysis     ALSO HOW TO SAVE THIS TO RIGHT PLACE?
+# Temporal Analysis    
 
 Create a temporal data frame and graph it
 
@@ -359,7 +365,7 @@ tevent_tweets_by_hour <- ts_data(tevent, by = "hours")
 ts_plot(tevent, by = "hours")
 ```
 
-# Network Analysis TRIED FIXING THIS! HOW TO SAVE TO RIGHT PLACE???
+# Network Analysis 
 
 Create a network data frame. 
 Other options for 'edges' in the network include mention, retweet, and reply
@@ -437,7 +443,7 @@ print(word_count)
 ## Graph frequencies of words
 
 ```{r word-frequency}
-tevent_words %>%
+content_analysis2 = tevent_words %>%
   count(word, sort = TRUE) %>%
   slice_head(n = 15) %>%
   mutate(word = reorder(word, n)) %>%
@@ -449,10 +455,26 @@ tevent_words %>%
     x = "Count",
     y = "Unique words",
     title = "Count of unique words found in tweets"
+  )+
+  theme(
+    panel.background = element_rect(fill = "transparent"), # bg of the panel
+    plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
   )
 ```
 
-## Analyze and graph word assoctiation 
+
+```{r save graph}
+ggsave(
+  here("results","figures","content_analysis2.png"),
+  plot = content_analysis2,
+  width = 8,
+  height = 8,
+  units = "in"
+)
+```
+
+
+## Analyze and graph word association 
 ```{r word-association}
 # separate words and count frequency of word pair occurrence in tweets
 tevent_word_pairs <- tevent_text %>%
@@ -489,12 +511,8 @@ word_pairs = tevent_word_pairs %>%
     x = "", y = ""
   )+
   theme(
-    plot.background = element_rect(
-    fill = "grey95",
-    colour = "black",
-    size = 1
-    ),
-    legend.background = element_rect(fill = "grey95")
+    panel.background = element_rect(fill = "transparent"), # bg of the panel
+    plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
   )
 ```
 
@@ -733,6 +751,10 @@ G_Score_Ida = ggplot() +
     plot.title = element_text(hjust = 0.5),
     axis.title.x = element_blank(),
     axis.title.y = element_blank()
+  )+
+  theme(
+    plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+    panel.background = element_rect(fill = "transparent"), # bg of the panel
   )
 ```
 
@@ -740,8 +762,8 @@ G_Score_Ida = ggplot() +
 ggsave(
   here("results","maps","G_Score_Ida.png"),
   plot = G_Score_Ida,
-  width = 8.5,
-  height = 11,
+  width = 8,
+  height = 5,
   units = "in"
 )
 ```
@@ -755,20 +777,25 @@ ntdi_ida = ggplot() +
   guides(fill = guide_legend(title = "Level of Increased Twitter Activity")) +
   labs(title = "Increased Twitter Activity During Hurricane Ida") +
   theme(
+    panel.background = element_rect(fill = "transparent"), # bg of the panel
+    plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
     plot.title = element_text(hjust = 0.5),
     axis.title.x = element_blank(),
     axis.title.y = element_blank()
   ) +
   xlim(-96, -67) +
-  ylim(24, 47)
+  ylim(24, 47)+
+  theme(
+    plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+  )
 ```
 
 ```{r save map}
 ggsave(
   here("results","maps","ntdi_ida.png"),
   plot = ntdi_ida,
-  width = 8.5,
-  height = 11,
+  width = 8,
+  height = 5,
   units = "in"
 )
 ```
@@ -943,7 +970,11 @@ sentiment_analysis1 = time1_wordsent %>%
   ggplot(aes(y = reorder(word, num), x = num, fill = sentiment)) +
     geom_bar(stat = "identity")+
     facet_wrap(~sentiment, scales = "free")+
-    labs(title = "Hurricane Ida Comments, August 29 - 31", x = "Frequency of Usage on Twitter", y = "Words Conveying Sentiment")
+    labs(title = "Hurricane Ida Comments, August 29 - 31", x = "Frequency of Usage on Twitter", y = "Words Conveying Sentiment")+
+  theme(
+    plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+    panel.background = element_rect(fill = "transparent"), # bg of the panel
+  )
 ```
 
 ```{r}
@@ -954,7 +985,11 @@ sentiment_analysis2 = time2_wordsent %>%
   ggplot(aes(y = reorder(word, num), x = num, fill = sentiment)) +
     geom_bar(stat = "identity")+
     facet_wrap(~sentiment, scales = "free")+
-    labs(title = "Hurricane Ida Comments, September 1 - 3", x = "Frequency of Usage on Twitter", y = "Words Conveying Sentiment")
+    labs(title = "Hurricane Ida Comments, September 1 - 3", x = "Frequency of Usage on Twitter", y = "Words Conveying Sentiment")+
+  theme(
+    plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+    panel.background = element_rect(fill = "transparent"), # bg of the panel
+  )
 ```
 
 
@@ -967,7 +1002,11 @@ sentiment_analysis3 = time3_wordsent %>%
   ggplot(aes(y = reorder(word, num), x = num, fill = sentiment)) +
     geom_bar(stat = "identity")+
     facet_wrap(~sentiment, scales = "free")+
-    labs(title = "Hurricane Ida Comments, September 4 - 10", x = "Frequency of Usage on Twitter", y = "Words Conveying Sentiment")
+    labs(title = "Hurricane Ida Comments, September 4 - 10", x = "Frequency of Usage on Twitter", y = "Words Conveying Sentiment")+
+  theme(
+    plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+    panel.background = element_rect(fill = "transparent"), # bg of the panel
+  )
 ```
 
 
@@ -1116,6 +1155,13 @@ saveRDS(counties2, here("data", "derived", "public", "counties2_tweet_counts.RDS
 saveRDS(counties3, here("data", "derived", "public", "counties3_tweet_counts.RDS"))
 ```
 
+
+```{r}
+counties1 <- readRDS(here("data", "derived", "public", "counties1_tweet_counts.RDS"))
+counties2 <- readRDS(here("data", "derived", "public", "counties2_tweet_counts.RDS"))
+counties3 <- readRDS(here("data", "derived", "public", "counties3_tweet_counts.RDS"))
+```
+
 ### Create Spatial Weight Matrices
 
 Use 110km Euclidean distance and include self in the weight matrix
@@ -1229,19 +1275,14 @@ counties2 <- counties2 %>%
     max(counties2$locG)
   )))
 
-siglevel2 <- c(1.15, 1.95, -.9, -1.17)
-
 counties3 <- counties3 %>%
   mutate(sig = cut(locG, c(
-    min(counties3$locG),
-    siglevel2[4],
-    siglevel2[3],
-    siglevel2[1],
-    siglevel2[2],
+    min(counties3$locG)-.01,
+    siglevel[1] * -1,
+    siglevel[1],
+    siglevel[2],
     max(counties3$locG)
   )))
-
-rm(siglevel, siglevel2)
 
 # map results!
 G_Score_Ida1 = ggplot() +
@@ -1257,7 +1298,12 @@ G_Score_Ida1 = ggplot() +
     plot.title = element_text(hjust = 0.5),
     axis.title.x = element_blank(),
     axis.title.y = element_blank()
+  )+
+  theme(
+    plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+    panel.background = element_rect(fill = "transparent"), # bg of the panel
   )
+  
 
 G_Score_Ida2 = ggplot() +
   geom_sf(data = counties2, aes(fill = sig), color = "white", lwd = 0.1) +
@@ -1272,13 +1318,17 @@ G_Score_Ida2 = ggplot() +
     plot.title = element_text(hjust = 0.5),
     axis.title.x = element_blank(),
     axis.title.y = element_blank()
+  )+
+  theme(
+    plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+    panel.background = element_rect(fill = "transparent"), # bg of the panel
   )
 
-G_Score_Ida3.1 = ggplot() +
+G_Score_Ida3.3 = ggplot() +
   geom_sf(data = counties3, aes(fill = sig), color = "white", lwd = 0.1) +
   scale_fill_manual(
-    values = c("#0000FF80", "#8080FF80", "#FFFFFF80", "#FF808080", "#FF000080"),
-    labels = c("low", "", "insignificant", "", "high"),
+    values = c("#8080FF80", "#FFFFFF80", "#FF808080", "#FF000080"),
+    labels = c("slightly low", "insignificant", "", "high"),
     aesthetics = "fill"
   ) +
   guides(fill = guide_legend(title = "Hot Spots")) +
@@ -1287,6 +1337,10 @@ G_Score_Ida3.1 = ggplot() +
     plot.title = element_text(hjust = 0.5),
     axis.title.x = element_blank(),
     axis.title.y = element_blank()
+  )+
+  theme(
+    plot.background = element_rect(fill = "transparent", color = NA), # bg of the plot
+    panel.background = element_rect(fill = "transparent"), # bg of the panel
   )
 ```
 
@@ -1294,28 +1348,27 @@ G_Score_Ida3.1 = ggplot() +
 ggsave(
   here("results","maps","G_Score_Ida1.png"),
   plot = G_Score_Ida1,
-  width = 8.5,
-  height = 11,
+  width = 8,
+  height = 5,
   units = "in"
 )
 
 ggsave(
   here("results","maps","G_Score_Ida2.png"),
   plot = G_Score_Ida2,
-  width = 8.5,
-  height = 11,
+  width = 8,
+  height = 5,
   units = "in"
 )
 
 ggsave(
-  here("results","maps","G_Score_Ida3.1.png"),
-  plot = G_Score_Ida3.1,
-  width = 8.5,
-  height = 11,
+  here("results","maps","G_Score_Ida3.3.png"),
+  plot = G_Score_Ida3.3,
+  width = 8,
+  height = 5,
   units = "in"
 )
 ```
 
-ISSUE! G_SCORE_IDA3 DOES NOT HAVE ALL OF THE SIGNIFICANCE LEVELS... HOW TO FIX?
 
 
