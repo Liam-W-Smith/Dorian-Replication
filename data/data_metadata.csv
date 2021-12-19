@@ -17,3 +17,8 @@ derived/public,tevent2ids.txt,csv,status id's for Twitter search,see metadata\re
 derived/public,tevent3ids.txt,csv,status id's for Twitter search,see metadata\readme.md
 derived/public,tevent4ids.txt,csv,status id's for Twitter search,see metadata\readme.md
 derived/public,counties.RDS,R data,census data for counties in Eastern U.S. queried with tidycensus,see metadata\readme.md
+derived/public,counties_tweet_counts.RDS,R data,counties with tweet data,see metadata\readme.md
+derived/public,counties1_tweet_counts.RDS,R data,first time subset of counties with tweet data,see metadata\readme.md
+derived/public,counties2_tweet_counts.RDS,R data,second time subset of counties with tweet data,see metadata\readme.md
+derived/public,counties3_tweet_counts.RDS,R data,third time subset of counties with tweet data,see metadata\readme.md
+derived/public,tevent_word_pairs.RDS,R data,word association data,see metadata\readme.md
