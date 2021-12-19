@@ -1,8 +1,9 @@
-# OR-Dorian
+# Dorian-Replication
 
-This compendium is for a research project in progress, with the aim of contrasting information from fake Twitter storms with real hurricanes, using the case of Hurricane Dorian in the United States.
+This compendium houses a replication study of [Joseph Holler's spatial twitter analysis of Hurricane Dorian](https://github.com/GIS4DEV/OR-Dorian).
+It applies a similar methodology to analyze Hurricane Ida and extends the research in new directions.
 
-This research was developed by Joseph Holler.
+This replication was developed by Liam Smith.
 
 
 # Template for Reproducible and Replicable Research
@@ -60,5 +61,5 @@ The structure of this repository closely follows the excellent [rr-init](https:/
 ## Repository Template Citation and License
 This research compendium template is in its testing phase. It will eventually be published to the public with an open-source license at
 https://github.com/HEGSRR/RR-Template
-The compendium is the work of Peter Kedron, Joseph Holler, and Zach Hilgendorf. 
+The compendium is the work of Peter Kedron, Joseph Holler, and Zach Hilgendorf.
 This draft version of the compendium is provided for private use only: not for distribution.
