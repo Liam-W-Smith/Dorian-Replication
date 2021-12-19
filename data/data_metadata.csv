@@ -4,21 +4,20 @@ raw/private,tevent_raw.RDS,R data,tweet data for Hurrian Ida data searched on 02
 raw/private,tevent_raw2.RDS,R data,tweet data for Hurrian Ida data searched on 05-Sept-2021,see metadata/readme.md
 raw/private,tevent_raw3.RDS,R data,tweet data for Hurrian Ida data searched on 10-Sept-2021,see metadata/readme.md
 raw/private,tevent_raw4.RDS,R data,tweet data for Hurrian Ida data searched on 10-Sept-2021 for different semantic coverage,see metadata/readme.md
-raw/public,control_raw.RDS,R data,status id's for twitter search, see metadata\readme.md
-raw/public,tdcontrol_raw.RDS,R data,status id's for twitter search, see metadata\readme.md
-derived/private,tevent.RDS,R data,processed tweet data for Hurrian Ida data searched on 02-Sept-2021,see metadata/readme.md
-derived/private,tevent2.RDS,R data,processed tweet data for Hurrian Ida data searched on 05-Sept-2021,see metadata/readme.md
-derived/private,tevent3.RDS,R data,processed tweet data for Hurrian Ida data searched on 10-Sept-2021,see metadata/readme.md
-derived/private,tevent4.RDS,R data,processed tweet data for Hurrian Ida data searched on 10-Sept-2021 for different semantic coverage,see metadata/readme.md
-derived/private,control_raw.RDS,R data,processed generic tweets after hurricane season,see metadata/readme.md
-derived/public,controlids.txt,csv,status id's for Twitter search,see metadata\readme.md
-derived/public,teventids.txt,csv,status id's for Twitter search,see metadata\readme.md
-derived/public,tevent2ids.txt,csv,status id's for Twitter search,see metadata\readme.md
-derived/public,tevent3ids.txt,csv,status id's for Twitter search,see metadata\readme.md
-derived/public,tevent4ids.txt,csv,status id's for Twitter search,see metadata\readme.md
-derived/public,counties.RDS,R data,census data for counties in Eastern U.S. queried with tidycensus,see metadata\readme.md
-derived/public,counties_tweet_counts.RDS,R data,counties with tweet data,see metadata\readme.md
-derived/public,counties1_tweet_counts.RDS,R data,first time subset of counties with tweet data,see metadata\readme.md
-derived/public,counties2_tweet_counts.RDS,R data,second time subset of counties with tweet data,see metadata\readme.md
-derived/public,counties3_tweet_counts.RDS,R data,third time subset of counties with tweet data,see metadata\readme.md
-derived/public,tevent_word_pairs.RDS,R data,word association data,see metadata\readme.md
+raw/public,control_raw.RDS,R data,status id's for twitter search, see metadata\N/A
+derived/private,tevent.RDS,R data,processed tweet data for Hurrian Ida data searched on 02-Sept-2021,N/A
+derived/private,tevent2.RDS,R data,processed tweet data for Hurrian Ida data searched on 05-Sept-2021,N/A
+derived/private,tevent3.RDS,R data,processed tweet data for Hurrian Ida data searched on 10-Sept-2021,N/A
+derived/private,tevent4.RDS,R data,processed tweet data for Hurrian Ida data searched on 10-Sept-2021 for different semantic coverage,N/A
+derived/private,control_raw.RDS,R data,processed generic tweets after hurricane season,N/A
+derived/public,controlids.txt,csv,status id's for Twitter search,N/A
+derived/public,teventids.txt,csv,status id's for Twitter search,N/A
+derived/public,tevent2ids.txt,csv,status id's for Twitter search,N/A
+derived/public,tevent3ids.txt,csv,status id's for Twitter search,N/A
+derived/public,tevent4ids.txt,csv,status id's for Twitter search,N/A
+derived/public,counties.RDS,R data,census data for counties in Eastern U.S. queried with tidycensus,N/A
+derived/public,counties_tweet_counts.RDS,R data,counties with tweet data,N/A
+derived/public,counties1_tweet_counts.RDS,R data,first time subset of counties with tweet data,N/A
+derived/public,counties2_tweet_counts.RDS,R data,second time subset of counties with tweet data,N/A
+derived/public,counties3_tweet_counts.RDS,R data,third time subset of counties with tweet data,N/A
+derived/public,tevent_word_pairs.RDS,R data,word association data,N/A

@@ -5,34 +5,65 @@ Metadata files should be listed for relevant data sources in [data/data_metadata
 
 # Twitter Data in dorian.Rdata
 
-This data was acquried with the `rtweet` package and `search tweets` Twitter API with two searches.
+This data was acquried with the `rtweet` package and `search tweets` Twitter API with five searches.
 
-The `dorian` data frame contains tweets for hurricane Dorian, searched on September 11, 2019 with the following code:
+The `tevent_raw`, `tevent_raw2`, `tevent_raw3`, `tevent_raw4` data frame contains tweets for hurricane ida, searched on September 2, 5, 10 in 2021 with the following code. The first three searches correspond to the first code chunk and the last search corresponds to the second code chunk. Jospeh Holler provided this data.
+
 ```r
-dorian <- search_tweets("dorian OR hurricane OR sharpiegate", n=200000, include_rts=FALSE, token=twitter_token, geocode="32,-78,1000mi", retryonratelimit=TRUE)
+tevent_raw <- search_tweets("ida OR hurricane",
+  n = 200000, include_rts = TRUE,
+  token = twitter_token,
+  geocode = "36,-87,1000mi",
+  retryonratelimit = TRUE)
 ```
 
-The `november` data frame contains tweets without any text filter for the same geographic region, searched on November 19, 2019 with the following code:
 ```r
-november <- search_tweets("-filter:verified OR filter:verified", n=200000, include_rts=FALSE, token=twitter_token, geocode="32,-78,1000mi", retryonratelimit=TRUE)
+tevent_raw4 <- search_tweets("ida OR flood OR electricity OR recovery OR outage",
+  n = 200000, include_rts = TRUE,
+  token = twitter_token,
+  geocode = "36,-87,1000mi",
+  retryonratelimit = TRUE)
+```
+
+The `control_raw` data frame contains tweets without any text filter for the same geographic region, searched by Castin Stone with the following code:
+
+```r
+control_raw <- search_tweets("-filter:verified OR filter:verified",
+  n = 200000, include_rts = FALSE,
+  token = twitter_token,
+  geocode = "32,-78,1000mi",
+  retryonratelimit = TRUE
+)
 ```
 
 Note that the code requries a valid `twitter_token` object in order to run correctly, and the `search_tweets` function cannot conduct a historical search. If you need to reproduce these results, you will need historic access to archived twitter data, and some tweets may have been edited or removed since the search was conducted.
 
-Following the search, the data was also filtered for more precise geographic locations and converted into point features with the following code.
+Following the search, the data was also filtered for more precise geographic locations, joined into a larger dataset, and converted into point features with the following code.
 
 ```r
-#convert GPS coordinates into lat and lng columns
-dorian <- lat_lng(dorian,coords=c("coords_coords"))
-november <- lat_lng(november,coords=c("coords_coords"))
+tevent_raw <- dplyr::union(tevent_raw1, tevent_raw2)
+tevent_raw <- dplyr::union(tevent_raw, tevent_raw3)
 
-#select any tweets with lat and lng columns (from GPS) or designated place types of your choosing
-dorian <- subset(dorian, place_type == 'city'| place_type == 'neighborhood'| place_type == 'poi' | !is.na(lat))
-november <- subset(november, place_type == 'city'| place_type == 'neighborhood'| place_type == 'poi' | !is.na(lat))
+tevent <- tevent_raw %>%
+  lat_lng(coords = c("coords_coords")) %>%
+  subset(place_type == "city" | place_type == "neighborhood" |
+    place_type == "poi" | !is.na(lat)
+  ) %>%
+  lat_lng(coords = c("bbox_coords"))
 
-#convert bounding boxes into centroids for lat and lng columns
-dorian <- lat_lng(dorian,coords=c("bbox_coords"))
-november <- lat_lng(november,coords=c("bbox_coords"))
+  tdcontrol <- tdcontrol_raw %>%
+    lat_lng(coords = c("coords_coords")) %>%
+    subset(place_type == "city" | place_type == "neighborhood" |
+      place_type == "poi" | !is.na(lat)
+    ) %>%
+    lat_lng(coords = c("bbox_coords"))
+
+write.table(tevent$status_id,
+  here("data", "derived", "public", "teventids.txt"),
+  append = FALSE, quote = FALSE, row.names = FALSE, col.names = FALSE
+  )
+write.table(tdcontrol$status_id,
+  here("data", "derived", "public", "tdcontrolids.txt"),
+  append = FALSE, quote = FALSE, row.names = FALSE, col.names = FALSE
+  )
 ```
-
-See the code in `01-search_dorain.r` for details.
